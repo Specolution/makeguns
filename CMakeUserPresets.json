@@ -8,7 +8,7 @@
             "inherits": "windows-base",
 
             "cacheVariables": {
-                "CMAKE_PREFIX_PATH": "C:\\Libraries\\SDL3-3.2.20"
+                "CMAKE_PREFIX_PATH": "C:\\Libraries\\SDL3-3.2.20;C:\\Libraries\\SDL3_image-3.2.4"
             }
         }
     ]
