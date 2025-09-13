@@ -38,6 +38,14 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
+  // create the renderer
+  state.renderer = SDL_CreateRenderer(state.window, nullptr);
+
+  if (!state.renderer) {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error",
+                             "Error creating renderer", state.window);
+  }
+
   // start the game loop
   bool running = true;
   while (running) {
@@ -59,6 +67,7 @@ int main(int argc, char *argv[]) {
 }
 
 void cleanup(SDLState &state) {
+  SDL_DestroyRenderer(state.renderer);
   SDL_DestroyWindow(state.window);
   SDL_Quit();
 }
