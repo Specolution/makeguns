@@ -8,9 +8,16 @@
 
 using namespace std;
 
-void cleanup(SDL_Window *win);
+struct SDLState {
+  SDL_Window *window;
+  SDL_Renderer *renderer;
+};
+
+void cleanup(SDLState &state);
 
 int main(int argc, char *argv[]) {
+
+  SDLState state;
 
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error",
@@ -21,13 +28,13 @@ int main(int argc, char *argv[]) {
   // create the Window
   int width = 800;
   int height = 600;
-  SDL_Window *win = SDL_CreateWindow("Make Guns", width, height, 0);
+  state.window = SDL_CreateWindow("Make Guns", width, height, 0);
 
-  if (!win) {
+  if (!state.window) {
 
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error",
-                             "Error creating window", win);
-    cleanup(win);
+                             "Error creating window", state.window);
+    cleanup(state);
     return 1;
   }
 
@@ -47,11 +54,11 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  cleanup(win);
+  cleanup(state);
   return 0;
 }
 
-void cleanup(SDL_Window *win) {
-  SDL_DestroyWindow(win);
+void cleanup(SDLState &state) {
+  SDL_DestroyWindow(state.window);
   SDL_Quit();
 }
