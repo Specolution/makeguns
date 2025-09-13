@@ -60,6 +60,12 @@ int main(int argc, char *argv[]) {
       }
       }
     }
+
+    // perform drawing commands
+    SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+    SDL_RenderClear(state.renderer);
+
+    SDL_RenderPresent(state.renderer);
   }
 
   cleanup(state);
