@@ -49,6 +49,7 @@ int main(int argc, char *argv[]) {
   // load game assets
 
   SDL_Texture *idleTex = IMG_LoadTexture(state.renderer, "data/idle.png");
+  SDL_SetTextureScaleMode(idleTex, SDL_SCALEMODE_NEAREST);
 
   // start the game loop
   bool running = true;
@@ -71,7 +72,9 @@ int main(int argc, char *argv[]) {
 
     SDL_FRect src{.x = 0, .y = 0, .w = 32, .h = 32};
 
-    SDL_RenderTexture(state.renderer, idleTex, &src, nullptr);
+    SDL_FRect dst{.x = 0, .y = 0, .w = 32, .h = 32};
+
+    SDL_RenderTexture(state.renderer, idleTex, &src, &dst);
 
     // swap buffers and present
     SDL_RenderPresent(state.renderer);
