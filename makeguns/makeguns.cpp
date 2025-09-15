@@ -4,7 +4,7 @@
 #include "makeguns.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-#include <SDL3_image/SDL_image.h>
+#include <SDL3_image/SDL_image.h >
 
 using namespace std;
 
@@ -46,6 +46,10 @@ int main(int argc, char *argv[]) {
                              "Error creating renderer", state.window);
   }
 
+  // load game assets
+
+  SDL_Texture *idleTex = IMG_LoadTexture(state.renderer, "data/idle.png");
+
   // start the game loop
   bool running = true;
   while (running) {
@@ -62,12 +66,18 @@ int main(int argc, char *argv[]) {
     }
 
     // perform drawing commands
-    SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+    SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
     SDL_RenderClear(state.renderer);
 
+    SDL_FRect src{.x = 0, .y = 0, .w = 32, .h = 32};
+
+    SDL_RenderTexture(state.renderer, idleTex, &src, nullptr);
+
+    // swap buffers and present
     SDL_RenderPresent(state.renderer);
   }
 
+  SDL_DestroyTexture(idleTex);
   cleanup(state);
   return 0;
 }
