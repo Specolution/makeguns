@@ -28,7 +28,8 @@ int main(int argc, char *argv[]) {
   // create the Window
   int width = 800;
   int height = 600;
-  state.window = SDL_CreateWindow("Make Guns", width, height, 0);
+  state.window =
+      SDL_CreateWindow("Make Guns", width, height, SDL_WINDOW_RESIZABLE);
 
   if (!state.window) {
 
@@ -46,8 +47,13 @@ int main(int argc, char *argv[]) {
                              "Error creating renderer", state.window);
   }
 
-  // load game assets
+  // configure presentation
+  int logW = 640;
+  int logH = 320;
+  SDL_SetRenderLogicalPresentation(state.renderer, logW, logH,
+                                   SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
+  // load game assets
   SDL_Texture *idleTex = IMG_LoadTexture(state.renderer, "data/idle.png");
   SDL_SetTextureScaleMode(idleTex, SDL_SCALEMODE_NEAREST);
 
@@ -61,6 +67,12 @@ int main(int argc, char *argv[]) {
       switch (event.type) {
       case SDL_EVENT_QUIT: {
         running = false;
+        break;
+      }
+
+      case SDL_EVENT_WINDOW_RESIZED: {
+        width = event.window.data1;
+        height = event.window.data2;
         break;
       }
       }
