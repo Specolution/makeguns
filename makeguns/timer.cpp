@@ -1,6 +1,6 @@
 #include "timer.h"
 
-Timer::Timer(float length) : length(length), time(0) {}
+Timer::Timer(float length) : length(length), time(0), timeout(false) {};
 
 void Timer::step(float deltaTime) {
   timeout = false;
@@ -12,6 +12,10 @@ void Timer::step(float deltaTime) {
     timeout = true;
   }
 }
+
+float Timer::getTime() const { return time; }
+
+float Timer::getLength() const { return length; }
 
 bool Timer::hasTimedOut() const { return timeout; }
 

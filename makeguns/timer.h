@@ -7,6 +7,7 @@ private:
   bool timeout;
 
 public:
+  Timer() : length(0), time(0), timeout(false) {};
   Timer(float length);
   void step(float deltaTime);
   float getTime() const;
