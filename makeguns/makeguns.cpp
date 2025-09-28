@@ -2,19 +2,32 @@
 //
 
 #include "makeguns.h"
-#include "animation.h"
+#include "gameobject.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3_image/SDL_image.h >
+#include <array>
 #include <string>
 #include <vector>
 
 using namespace std;
 
+const size_t LAYER_IDX_LEVEL = 0;
+const size_t LAYER_IDX_CHARACTERS = 1;
+
 struct SDLState {
   SDL_Window *window;
   SDL_Renderer *renderer;
   int width, height, logW, logH;
+};
+
+struct GameState {
+  std::array<std::vector<GameObject>, 2> layers;
+  int playerIndex;
+
+  GameState() {
+    playerIndex = 0; // WILL CHANGE THIS WHEN WE LOAD MAPS
+  }
 };
 
 struct Resources {
@@ -47,7 +60,6 @@ struct Resources {
 };
 
 bool initialize(SDLState &state);
-
 void cleanup(SDLState &state);
 
 int main(int argc, char *argv[]) {

@@ -8,7 +8,7 @@ find_package (SDL3 REQUIRED)
 find_package(SDL3_image REQUIRED)
 find_package(glm REQUIRED)
 
-add_executable (makeguns "makeguns.cpp" "timer.h" "animation.h" "timer.cpp" "animation.cpp")
+add_executable (makeguns "makeguns.cpp" "timer.h" "animation.h" "timer.cpp" "animation.cpp" "gameobject.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET makeguns PROPERTY CXX_STANDARD 20)
