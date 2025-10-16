@@ -119,6 +119,15 @@ int main(int argc, char *argv[]) {
       }
     }
 
+    // update all objects
+    for (auto &layer : gs.layers) {
+      for (GameObject &obj : layer) {
+        if (obj.currentAnimation != -1) {
+          obj.animations[obj.currentAnimation].step(deltaTime);
+        }
+      }
+    }
+
     // perform drawing commands
     SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
     SDL_RenderClear(state.renderer);
@@ -186,10 +195,13 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
                 float deltaTime) {
 
   const float spriteSize = 32;
-  SDL_FRect src{.x = 0, .y = 0, .w = 32, .h = 32};
+  float srcX =
+      obj.currentAnimation != -1
+          ? obj.animations[obj.currentAnimation].currentFrame() * spriteSize
+          : 0.0f;
+  SDL_FRect src{.x = srcX, .y = 0, .w = 32, .h = 32};
 
-  SDL_FRect dst{
-      .x = obj.position.x, .y = obj.position.y - spriteSize, .w = 32, .h = 32};
+  SDL_FRect dst{.x = obj.position.x, .y = obj.position.y, .w = 32, .h = 32};
 
   SDL_FlipMode flipMode =
       obj.direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
