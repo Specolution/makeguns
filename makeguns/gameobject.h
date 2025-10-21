@@ -4,11 +4,11 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-enum class PLayerState { idle, running, jumping };
+enum class PlayerState { idle, running, jumping };
 
 struct PlayerData {
-  PLayerState state;
-  PlayerData() { state = PLayerState::idle; }
+  PlayerState state;
+  PlayerData() { state = PlayerState::idle; }
 };
 
 struct LevelData {};
@@ -27,6 +27,7 @@ struct GameObject {
   ObjectData data;
   glm::vec2 position, velocity, acceleration;
   float direction;
+  float maxSpeedX;
   std::vector<Animation> animations;
   int currentAnimation;
   SDL_Texture *texture;
@@ -34,6 +35,7 @@ struct GameObject {
   GameObject() : data{.level = LevelData()} {
     type = ObjectType::level;
     direction = 1;
+    maxSpeedX = 0;
     position = velocity = acceleration = glm::vec2(0);
     currentAnimation = -1;
     texture = nullptr;

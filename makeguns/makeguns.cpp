@@ -19,6 +19,9 @@ struct SDLState {
   SDL_Window *window;
   SDL_Renderer *renderer;
   int width, height, logW, logH;
+
+  const bool *keys;
+  SDLState() : keys(SDL_GetKeyboardState(nullptr)) {}
 };
 
 struct GameState {
@@ -63,6 +66,8 @@ bool initialize(SDLState &state);
 void cleanup(SDLState &state);
 void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
                 float deltaTime);
+void update(const SDLState &state, GameState &gs, Resources &res,
+            GameObject &obj, float deltaTime);
 
 int main(int argc, char *argv[]) {
 
@@ -91,9 +96,10 @@ int main(int argc, char *argv[]) {
   player.texture = res.texIdle;
   player.animations = res.playerAnims;
   player.currentAnimation = res.ANIM_PLAYER_IDLE;
+  player.acceleration = glm::vec2(300, 0);
+  player.maxSpeedX = 100;
   gs.layers[LAYER_IDX_CHARACTERS].push_back(player);
 
-  const bool *keys = SDL_GetKeyboardState(nullptr);
   uint64_t prevTime = SDL_GetTicks();
 
   // start the game loop
@@ -122,6 +128,10 @@ int main(int argc, char *argv[]) {
     // update all objects
     for (auto &layer : gs.layers) {
       for (GameObject &obj : layer) {
+
+        update(state, gs, res, obj, deltaTime);
+
+        // update the animation
         if (obj.currentAnimation != -1) {
           obj.animations[obj.currentAnimation].step(deltaTime);
         }
@@ -208,4 +218,49 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
 
   SDL_RenderTextureRotated(state.renderer, obj.texture, &src, &dst, 0, nullptr,
                            flipMode);
+}
+
+void update(const SDLState &state, GameState &gs, Resources &res,
+            GameObject &obj, float deltaTime) {
+  if (obj.type == ObjectType::player) {
+
+    float currentDirection = 0;
+
+    if (state.keys[SDL_SCANCODE_A]) {
+
+      currentDirection += -1;
+    }
+
+    if (state.keys[SDL_SCANCODE_D]) {
+      currentDirection += 1;
+    }
+
+    if (currentDirection) {
+      obj.direction = currentDirection;
+    }
+
+    switch (obj.data.player.state) {
+
+    case PlayerState::idle: {
+      if (currentDirection) {
+        obj.data.player.state = PlayerState::running;
+      }
+      break;
+    }
+
+    case PlayerState::running: {
+
+      if (!currentDirection) {
+        obj.data.player.state = PlayerState::idle;
+      }
+      break;
+    }
+    }
+
+    // add acceleration to velocity
+    obj.velocity += currentDirection * obj.acceleration * deltaTime;
+
+    // add velocity to position
+    obj.position += obj.velocity * deltaTime;
+  }
 }
