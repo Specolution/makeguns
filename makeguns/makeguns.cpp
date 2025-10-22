@@ -35,9 +35,10 @@ struct GameState {
 
 struct Resources {
   const int ANIM_PLAYER_IDLE = 0;
+  const int ANIM_PLAYER_RUN = 1;
   std::vector<Animation> playerAnims;
   std::vector<SDL_Texture *> textures;
-  SDL_Texture *texIdle;
+  SDL_Texture *texIdle, *texRun;
 
   SDL_Texture *loadTexture(SDL_Renderer *renderer,
                            const std::string &filepath) {
@@ -50,8 +51,9 @@ struct Resources {
   void load(SDLState &state) {
     playerAnims.resize(5);
     playerAnims[ANIM_PLAYER_IDLE] = Animation(8, 1.6f);
-
+    playerAnims[ANIM_PLAYER_RUN] = Animation(4, 0.5f);
     texIdle = loadTexture(state.renderer, "data/idle.png");
+    texRun = loadTexture(state.renderer, "data/run.png");
   }
 
   void unload() {
@@ -93,6 +95,7 @@ int main(int argc, char *argv[]) {
   // create our player
   GameObject player;
   player.type = ObjectType::player;
+  player.data.player = PlayerData();
   player.texture = res.texIdle;
   player.animations = res.playerAnims;
   player.currentAnimation = res.ANIM_PLAYER_IDLE;
@@ -244,6 +247,22 @@ void update(const SDLState &state, GameState &gs, Resources &res,
     case PlayerState::idle: {
       if (currentDirection) {
         obj.data.player.state = PlayerState::running;
+        obj.texture = res.texRun;
+        obj.currentAnimation = res.ANIM_PLAYER_IDLE;
+      } else {
+
+        // decelerate
+        if (obj.velocity.x) {
+          const float factor = obj.velocity.x > 0 ? -1.5f : 1.5f;
+
+          float amount = factor * obj.acceleration.x * deltaTime;
+          if (std::abs(obj.velocity.x) < std::abs(amount)) {
+
+            obj.velocity.x = 0;
+          } else {
+            obj.velocity.x += amount;
+          }
+        }
       }
       break;
     }
@@ -252,6 +271,8 @@ void update(const SDLState &state, GameState &gs, Resources &res,
 
       if (!currentDirection) {
         obj.data.player.state = PlayerState::idle;
+        obj.texture = res.texIdle;
+        obj.currentAnimation = res.ANIM_PLAYER_IDLE;
       }
       break;
     }
@@ -259,6 +280,9 @@ void update(const SDLState &state, GameState &gs, Resources &res,
 
     // add acceleration to velocity
     obj.velocity += currentDirection * obj.acceleration * deltaTime;
+    if (std::abs(obj.velocity.x) > obj.maxSpeedX) {
+      obj.velocity.x = currentDirection * obj.maxSpeedX;
+    }
 
     // add velocity to position
     obj.position += obj.velocity * deltaTime;
