@@ -248,7 +248,7 @@ void update(const SDLState &state, GameState &gs, Resources &res,
       if (currentDirection) {
         obj.data.player.state = PlayerState::running;
         obj.texture = res.texRun;
-        obj.currentAnimation = res.ANIM_PLAYER_IDLE;
+        obj.currentAnimation = res.ANIM_PLAYER_RUN;
       } else {
 
         // decelerate
