@@ -41,7 +41,7 @@ struct Resources {
   const int ANIM_PLAYER_RUN = 1;
   std::vector<Animation> playerAnims;
   std::vector<SDL_Texture *> textures;
-  SDL_Texture *texIdle, *texRun;
+  SDL_Texture *texIdle, *texRun, *texBrick, *texGrass, *texGround, *texPanel;
 
   SDL_Texture *loadTexture(SDL_Renderer *renderer,
                            const std::string &filepath) {
@@ -57,6 +57,10 @@ struct Resources {
     playerAnims[ANIM_PLAYER_RUN] = Animation(4, 0.5f);
     texIdle = loadTexture(state.renderer, "data/idle.png");
     texRun = loadTexture(state.renderer, "data/run.png");
+    texBrick = loadTexture(state.renderer, "data/tiles/brick.png");
+    texGrass = loadTexture(state.renderer, "data/tiles/grass.png");
+    texGround = loadTexture(state.renderer, "data/tiles/ground.png");
+    texPanel = loadTexture(state.renderer, "data/tiles/panel.png");
   }
 
   void unload() {
@@ -207,7 +211,10 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
           : 0.0f;
   SDL_FRect src{.x = srcX, .y = 0, .w = 32, .h = 32};
 
-  SDL_FRect dst{.x = obj.position.x, .y = obj.position.y, .w = 32, .h = 32};
+  SDL_FRect dst{.x = obj.position.x,
+                .y = obj.position.y,
+                .w = spriteSize,
+                .h = spriteSize};
 
   SDL_FlipMode flipMode =
       obj.direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
@@ -295,6 +302,7 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res) {
 
   short map[MAP_ROWS][MAP_COLS] = {
 
+      4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -302,10 +310,19 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res) {
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
+  };
+
+  const auto createObject = [&state](int r, int c, SDL_Texture *tex,
+                                     ObjectType type) {
+    GameObject o;
+    o.type = type;
+    o.position =
+        glm::vec2(c * TILE_SIZE, state.logH - (MAP_ROWS - r) * TILE_SIZE);
+    o.texture = tex;
+    return o;
   };
 
   for (int r = 0; r < MAP_ROWS; r++) {
@@ -313,16 +330,21 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res) {
     for (int c = 0; c < MAP_COLS; c++) {
 
       switch (map[r][c]) {
+      case 1: // ground
+
+      {
+
+        GameObject o = createObject(r, c, res.texGround, ObjectType::level);
+        gs.layers[LAYER_IDX_LEVEL].push_back(o);
+        break;
+      }
+
       case 4: // player
       {
 
         // create our player
-        GameObject player;
-        player.position =
-            glm::vec2(c * TILE_SIZE, state.logH - (MAP_ROWS - r) * TILE_SIZE);
-        player.type = ObjectType::player;
+        GameObject player = createObject(r, c, res.texIdle, ObjectType::player);
         player.data.player = PlayerData();
-        player.texture = res.texIdle;
         player.animations = res.playerAnims;
         player.currentAnimation = res.ANIM_PLAYER_IDLE;
         player.acceleration = glm::vec2(300, 0);
