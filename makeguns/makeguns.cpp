@@ -225,6 +225,12 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
 
 void update(const SDLState &state, GameState &gs, Resources &res,
             GameObject &obj, float deltaTime) {
+
+  // apply some gravity
+  if (obj.dynamic) {
+    obj.velocity += glm::vec2(0, 500) * deltaTime;
+  }
+
   if (obj.type == ObjectType::player) {
 
     float currentDirection = 0;
@@ -283,10 +289,10 @@ void update(const SDLState &state, GameState &gs, Resources &res,
     if (std::abs(obj.velocity.x) > obj.maxSpeedX) {
       obj.velocity.x = currentDirection * obj.maxSpeedX;
     }
-
-    // add velocity to position
-    obj.position += obj.velocity * deltaTime;
   }
+
+  // add velocity to position
+  obj.position += obj.velocity * deltaTime;
 }
 
 void createTiles(const SDLState &state, GameState &gs, const Resources &res) {
@@ -310,7 +316,7 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res) {
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      1, 1, 1, 1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
   };
@@ -339,6 +345,24 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res) {
         break;
       }
 
+      case 2: // panel
+
+      {
+
+        GameObject o = createObject(r, c, res.texPanel, ObjectType::level);
+        gs.layers[LAYER_IDX_LEVEL].push_back(o);
+        break;
+      }
+
+      case 3: // panel
+
+      {
+
+        GameObject o = createObject(r, c, res.texGrass, ObjectType::level);
+        gs.layers[LAYER_IDX_LEVEL].push_back(o);
+        break;
+      }
+
       case 4: // player
       {
 
@@ -349,6 +373,7 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res) {
         player.currentAnimation = res.ANIM_PLAYER_IDLE;
         player.acceleration = glm::vec2(300, 0);
         player.maxSpeedX = 100;
+        player.dynamic = true;
         gs.layers[LAYER_IDX_CHARACTERS].push_back(player);
 
         break;
