@@ -78,6 +78,8 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
 void update(const SDLState &state, GameState &gs, Resources &res,
             GameObject &obj, float deltaTime);
 void createTiles(const SDLState &state, GameState &gs, const Resources &res);
+void checkCollision(const SDLState &state, GameState &gs, const Resources &res,
+                    GameObject &a, GameObject &b, float deltaTime);
 
 int main(int argc, char *argv[]) {
 
@@ -293,6 +295,75 @@ void update(const SDLState &state, GameState &gs, Resources &res,
 
   // add velocity to position
   obj.position += obj.velocity * deltaTime;
+
+  // handle collision detection
+  for (auto &layer : gs.layers) {
+    for (GameObject &objB : layer) {
+      if (&obj != &objB) {
+        checkCollision(state, gs, res, obj, objB, deltaTime);
+      }
+    }
+  }
+}
+
+void collisionResponse(const SDLState &state, GameState &gs, const Resources,
+                       const SDL_FRect &rectA, const SDL_FRect &rectB,
+                       const SDL_FRect &rectC, GameObject &objA,
+                       GameObject &objB, float deltaTime) {
+  // object we are checking
+  if (objA.type == ObjectType::player) {
+
+    // object it is colliding with
+    switch (objB.type) {
+    case ObjectType::level: {
+
+      if (rectC.w < rectC.h) {
+        // horizontal collision
+        if (objA.velocity.x > 0) // going right
+        {
+          objA.position.x -= rectC.w;
+        } else if (objA.velocity.x < 0) // going left
+        {
+
+          objA.position.x += rectC.w;
+        }
+
+        objA.velocity.x = 0;
+      } else {
+
+        // vertical collision
+        if (objA.velocity.y > 0) {
+
+          objA.position.y -= rectC.h; // going down
+        } else if (objA.velocity.y < 0) {
+
+          objA.position.y += rectC.h; // going up}
+        }
+
+        objA.velocity.y = 0;
+      }
+      break;
+    }
+    }
+  }
+}
+
+void checkCollision(const SDLState &state, GameState &gs, const Resources &res,
+                    GameObject &a, GameObject &b, float deltaTime) {
+
+  SDL_FRect rectA{
+      .x = a.position.x, .y = a.position.y, .w = TILE_SIZE, .h = TILE_SIZE};
+
+  SDL_FRect rectB{
+      .x = b.position.x, .y = b.position.y, .w = TILE_SIZE, .h = TILE_SIZE};
+
+  SDL_FRect rectC{0};
+
+  if (SDL_GetRectIntersectionFloat(&rectA, &rectB, &rectC)) {
+    // found intersection, respong accordingly
+
+    collisionResponse(state, gs, res, rectA, rectB, rectC, a, b, deltaTime);
+  }
 }
 
 void createTiles(const SDLState &state, GameState &gs, const Resources &res) {
