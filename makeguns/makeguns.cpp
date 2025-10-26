@@ -32,8 +32,10 @@ struct GameState {
   int playerIndex;
 
   GameState() {
-    playerIndex = 0; // WILL CHANGE THIS WHEN WE LOAD MAPS
+    playerIndex = -1; // WILL CHANGE THIS WHEN WE LOAD MAPS
   }
+
+  GameObject &player() { return layers[LAYER_IDX_CHARACTERS][playerIndex]; };
 };
 
 struct Resources {
@@ -80,6 +82,8 @@ void update(const SDLState &state, GameState &gs, Resources &res,
 void createTiles(const SDLState &state, GameState &gs, const Resources &res);
 void checkCollision(const SDLState &state, GameState &gs, const Resources &res,
                     GameObject &a, GameObject &b, float deltaTime);
+void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
+                    SDL_Scancode key, bool keyDown);
 
 int main(int argc, char *argv[]) {
 
@@ -122,6 +126,16 @@ int main(int argc, char *argv[]) {
       case SDL_EVENT_WINDOW_RESIZED: {
         state.width = event.window.data1;
         state.height = event.window.data2;
+        break;
+      }
+
+      case SDL_EVENT_KEY_DOWN: {
+        handleKeyInput(state, gs, gs.player(), event.key.scancode, true);
+        break;
+      }
+
+      case SDL_EVENT_KEY_UP: {
+        handleKeyInput(state, gs, gs.player(), event.key.scancode, false);
         break;
       }
       }
@@ -351,8 +365,10 @@ void collisionResponse(const SDLState &state, GameState &gs, const Resources,
 void checkCollision(const SDLState &state, GameState &gs, const Resources &res,
                     GameObject &a, GameObject &b, float deltaTime) {
 
-  SDL_FRect rectA{
-      .x = a.position.x, .y = a.position.y, .w = TILE_SIZE, .h = TILE_SIZE};
+  SDL_FRect rectA{.x = a.position.x + a.collider.x,
+                  .y = a.position.y + a.collider.y,
+                  .w = a.collider.w,
+                  .h = a.collider.h};
 
   SDL_FRect rectB{
       .x = b.position.x, .y = b.position.y, .w = TILE_SIZE, .h = TILE_SIZE};
@@ -399,6 +415,7 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res) {
     o.position =
         glm::vec2(c * TILE_SIZE, state.logH - (MAP_ROWS - r) * TILE_SIZE);
     o.texture = tex;
+    o.collider = {.x = 0, .y = 0, .w = TILE_SIZE, .h = TILE_SIZE};
     return o;
   };
 
@@ -445,11 +462,16 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res) {
         player.acceleration = glm::vec2(300, 0);
         player.maxSpeedX = 100;
         player.dynamic = true;
+        player.collider = {.x = 11, .y = 6, .w = 10, .h = 26};
         gs.layers[LAYER_IDX_CHARACTERS].push_back(player);
-
+        gs.playerIndex = gs.layers[LAYER_IDX_CHARACTERS].size() - 1;
         break;
       }
       }
     }
   }
+  assert(gs.playerIndex != -1);
 }
+
+void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
+                    SDL_Scancode key, bool keyDown) {}
