@@ -7,6 +7,7 @@
 #include <SDL3/SDL_main.h>
 #include <SDL3_image/SDL_image.h >
 #include <array>
+#include <format>
 #include <string>
 #include <vector>
 
@@ -164,6 +165,14 @@ int main(int argc, char *argv[]) {
         drawObject(state, gs, obj, deltaTime);
       }
     }
+
+    // display some debug info
+    SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+    SDL_RenderDebugText(
+        state.renderer, 5, 5,
+        std::format("State: {}",
+                    static_cast<int>(gs.player().data.player.state))
+            .c_str());
 
     // swap buffers and present
     SDL_RenderPresent(state.renderer);
@@ -349,12 +358,8 @@ void collisionResponse(const SDLState &state, GameState &gs, const Resources,
         if (objA.velocity.y > 0) {
 
           objA.position.y -= rectC.h; // going down
-        } else if (objA.velocity.y < 0) {
-
-          objA.position.y += rectC.h; // going up}
+          objA.velocity.y = 0;
         }
-
-        objA.velocity.y = 0;
       }
       break;
     }
@@ -396,7 +401,7 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res) {
   short map[MAP_ROWS][MAP_COLS] = {
 
       4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -474,4 +479,28 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res) {
 }
 
 void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
-                    SDL_Scancode key, bool keyDown) {}
+                    SDL_Scancode key, bool keyDown) {
+
+  const float JUMP_FORCE = -200.0f;
+
+  if (obj.type == ObjectType::player) {
+
+    switch (obj.data.player.state) {
+    case PlayerState::idle:
+
+    {
+
+      if (key == SDL_SCANCODE_K && keyDown) {
+
+        obj.data.player.state = PlayerState::jumping;
+        obj.velocity.y += JUMP_FORCE;
+      }
+      break;
+    }
+
+    case PlayerState::running: {
+      break;
+    }
+    }
+  }
+}
