@@ -42,9 +42,11 @@ struct GameState {
 struct Resources {
   const int ANIM_PLAYER_IDLE = 0;
   const int ANIM_PLAYER_RUN = 1;
+  const int ANIM_PLAYER_SLIDE = 2;
   std::vector<Animation> playerAnims;
   std::vector<SDL_Texture *> textures;
-  SDL_Texture *texIdle, *texRun, *texBrick, *texGrass, *texGround, *texPanel;
+  SDL_Texture *texIdle, *texRun, *texBrick, *texGrass, *texGround, *texPanel,
+      *texSlide;
 
   SDL_Texture *loadTexture(SDL_Renderer *renderer,
                            const std::string &filepath) {
@@ -58,7 +60,9 @@ struct Resources {
     playerAnims.resize(5);
     playerAnims[ANIM_PLAYER_IDLE] = Animation(8, 1.6f);
     playerAnims[ANIM_PLAYER_RUN] = Animation(4, 0.5f);
+    playerAnims[ANIM_PLAYER_SLIDE] = Animation(1, 1.0f);
     texIdle = loadTexture(state.renderer, "data/idle.png");
+    texSlide = loadTexture(state.renderer, "data/slide.png");
     texRun = loadTexture(state.renderer, "data/run.png");
     texBrick = loadTexture(state.renderer, "data/tiles/brick.png");
     texGrass = loadTexture(state.renderer, "data/tiles/grass.png");
@@ -278,8 +282,7 @@ void update(const SDLState &state, GameState &gs, Resources &res,
     case PlayerState::idle: {
       if (currentDirection) {
         obj.data.player.state = PlayerState::running;
-        obj.texture = res.texRun;
-        obj.currentAnimation = res.ANIM_PLAYER_RUN;
+
       } else {
 
         // decelerate
@@ -295,6 +298,9 @@ void update(const SDLState &state, GameState &gs, Resources &res,
           }
         }
       }
+
+      obj.texture = res.texIdle;
+      obj.currentAnimation = res.ANIM_PLAYER_IDLE;
       break;
     }
 
@@ -302,9 +308,27 @@ void update(const SDLState &state, GameState &gs, Resources &res,
 
       if (!currentDirection) {
         obj.data.player.state = PlayerState::idle;
-        obj.texture = res.texIdle;
-        obj.currentAnimation = res.ANIM_PLAYER_IDLE;
       }
+
+      // moving in opposite direction of velocity, sliding!
+
+      if (obj.velocity.x * obj.direction < 0 && obj.grounded) {
+
+        obj.texture = res.texSlide;
+        obj.currentAnimation = res.ANIM_PLAYER_SLIDE;
+
+      } else {
+
+        obj.texture = res.texRun;
+        obj.currentAnimation = res.ANIM_PLAYER_RUN;
+      }
+      break;
+    }
+
+    case PlayerState::jumping: {
+
+      obj.texture = res.texRun;
+      obj.currentAnimation = res.ANIM_PLAYER_RUN;
       break;
     }
     }
