@@ -51,7 +51,7 @@ struct Resources {
   std::vector<Animation> playerAnims;
   std::vector<SDL_Texture *> textures;
   SDL_Texture *texIdle, *texRun, *texBrick, *texGrass, *texGround, *texPanel,
-      *texSlide;
+      *texSlide, *texBg1, *texBg2, *texBg3, *texBg4;
 
   SDL_Texture *loadTexture(SDL_Renderer *renderer,
                            const std::string &filepath) {
@@ -73,6 +73,10 @@ struct Resources {
     texGrass = loadTexture(state.renderer, "data/tiles/grass.png");
     texGround = loadTexture(state.renderer, "data/tiles/ground.png");
     texPanel = loadTexture(state.renderer, "data/tiles/panel.png");
+    texBg1 = loadTexture(state.renderer, "data/bg/bg_layer1.png");
+    texBg2 = loadTexture(state.renderer, "data/bg/bg_layer2.png");
+    texBg3 = loadTexture(state.renderer, "data/bg/bg_layer3.png");
+    texBg4 = loadTexture(state.renderer, "data/bg/bg_layer4.png");
   }
 
   void unload() {
@@ -171,6 +175,9 @@ int main(int argc, char *argv[]) {
     // perform drawing commands
     SDL_SetRenderDrawColor(state.renderer, 20, 10, 30, 255);
     SDL_RenderClear(state.renderer);
+
+    // draw background images
+    SDL_RenderTexture(state.renderer, res.texBg1, nullptr, nullptr);
 
     // draw all objects
     for (auto &layer : gs.layers) {
