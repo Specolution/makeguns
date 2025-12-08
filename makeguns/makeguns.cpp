@@ -32,6 +32,7 @@ struct GameState {
   std::array<std::vector<GameObject>, 2> layers;
   int playerIndex;
   SDL_FRect mapViewport;
+  float bg2Scroll, bg3Scroll, bg4Scroll;
 
   GameState(const SDLState &state) {
     playerIndex = -1; // WILL CHANGE THIS WHEN WE LOAD MAPS
@@ -39,6 +40,7 @@ struct GameState {
                             .y = 0,
                             .w = static_cast<float>(state.logW),
                             .h = static_cast<float>(state.logH)};
+    bg2Scroll = bg3Scroll = bg4Scroll = 0;
   }
 
   GameObject &player() { return layers[LAYER_IDX_CHARACTERS][playerIndex]; };
@@ -98,6 +100,9 @@ void checkCollision(const SDLState &state, GameState &gs, const Resources &res,
                     GameObject &a, GameObject &b, float deltaTime);
 void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
                     SDL_Scancode key, bool keyDown);
+void drawParalaxBackground(SDL_Renderer *renderer, SDL_Texture *texture,
+                           float xVelocity, float &scrollPos,
+                           float scrollFactor, float deltaTime);
 
 int main(int argc, char *argv[]) {
 
@@ -178,6 +183,8 @@ int main(int argc, char *argv[]) {
 
     // draw background images
     SDL_RenderTexture(state.renderer, res.texBg1, nullptr, nullptr);
+    drawParalaxBackground(state.renderer, res.texBg2, gs.player().velocity.x,
+                          gs.bg2Scroll, 0.3f, deltaTime);
 
     // draw all objects
     for (auto &layer : gs.layers) {
@@ -567,4 +574,21 @@ void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
     }
     }
   }
+}
+
+void drawParalaxBackground(SDL_Renderer *renderer, SDL_Texture *texture,
+                           float xVelocity, float &scrollPos,
+                           float scrollFactor, float deltaTime) {
+
+  scrollPos -= xVelocity * scrollFactor * deltaTime;
+  if (scrollPos <= -texture->w) {
+    scrollPos = 0;
+  }
+
+  SDL_FRect dst{.x = scrollPos,
+                .y = 30,
+                .w = texture->w * 2.0f,
+                .h = static_cast<float>(texture->h)};
+
+  SDL_RenderTextureTiled(renderer, texture, nullptr, 1, &dst);
 }
