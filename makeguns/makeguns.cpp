@@ -183,6 +183,10 @@ int main(int argc, char *argv[]) {
 
     // draw background images
     SDL_RenderTexture(state.renderer, res.texBg1, nullptr, nullptr);
+    drawParalaxBackground(state.renderer, res.texBg4, gs.player().velocity.x,
+                          gs.bg4Scroll, 0.075f, deltaTime);
+    drawParalaxBackground(state.renderer, res.texBg3, gs.player().velocity.x,
+                          gs.bg3Scroll, 0.150f, deltaTime);
     drawParalaxBackground(state.renderer, res.texBg2, gs.player().velocity.x,
                           gs.bg2Scroll, 0.3f, deltaTime);
 
