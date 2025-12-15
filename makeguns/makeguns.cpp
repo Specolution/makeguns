@@ -265,6 +265,8 @@ bool initialize(SDLState &state) {
     initSuccess = false;
   }
 
+  SDL_SetRenderVSync(state.renderer, 1);
+
   // configure presentation
   SDL_SetRenderLogicalPresentation(state.renderer, state.logW, state.logH,
                                    SDL_LOGICAL_PRESENTATION_LETTERBOX);
