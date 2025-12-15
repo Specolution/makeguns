@@ -1,5 +1,4 @@
 ﻿// makeguns.cpp : Defines the entry point for the application.
-//
 
 #include "makeguns.h"
 #include "gameobject.h"
@@ -54,6 +53,10 @@ struct Resources {
   const int ANIM_PLAYER_RUN = 1;
   const int ANIM_PLAYER_SLIDE = 2;
   std::vector<Animation> playerAnims;
+  const int ANIM_BULLET_MOVING = 0;
+  const int ANIM_BULLET_HIT = 1;
+  std::vector<Animation> bulletAnims;
+
   std::vector<SDL_Texture *> textures;
   SDL_Texture *texIdle, *texRun, *texBrick, *texGrass, *texGround, *texPanel,
       *texSlide, *texBg1, *texBg2, *texBg3, *texBg4, *texBullet, *texBulletHit;
@@ -71,6 +74,9 @@ struct Resources {
     playerAnims[ANIM_PLAYER_IDLE] = Animation(8, 1.6f);
     playerAnims[ANIM_PLAYER_RUN] = Animation(4, 0.5f);
     playerAnims[ANIM_PLAYER_SLIDE] = Animation(1, 1.0f);
+    bulletAnims.resize(2);
+    bulletAnims[ANIM_BULLET_MOVING] = Animation(4, 0.05f);
+    bulletAnims[ANIM_BULLET_HIT] = Animation(4, 0.15f);
     texIdle = loadTexture(state.renderer, "data/idle.png");
     texSlide = loadTexture(state.renderer, "data/slide.png");
     texRun = loadTexture(state.renderer, "data/run.png");
