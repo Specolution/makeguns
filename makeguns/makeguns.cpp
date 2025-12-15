@@ -32,6 +32,7 @@ struct GameState {
   std::array<std::vector<GameObject>, 2> layers;
   std::vector<GameObject> backgroundTiles;
   std::vector<GameObject> foregroundTiles;
+  std::vector<GameObject> bullets;
   int playerIndex;
   SDL_FRect mapViewport;
   float bg2Scroll, bg3Scroll, bg4Scroll;
@@ -55,7 +56,7 @@ struct Resources {
   std::vector<Animation> playerAnims;
   std::vector<SDL_Texture *> textures;
   SDL_Texture *texIdle, *texRun, *texBrick, *texGrass, *texGround, *texPanel,
-      *texSlide, *texBg1, *texBg2, *texBg3, *texBg4;
+      *texSlide, *texBg1, *texBg2, *texBg3, *texBg4, *texBullet, *texBulletHit;
 
   SDL_Texture *loadTexture(SDL_Renderer *renderer,
                            const std::string &filepath) {
@@ -81,6 +82,8 @@ struct Resources {
     texBg2 = loadTexture(state.renderer, "data/bg/bg_layer2.png");
     texBg3 = loadTexture(state.renderer, "data/bg/bg_layer3.png");
     texBg4 = loadTexture(state.renderer, "data/bg/bg_layer4.png");
+    texBullet = loadTexture(state.renderer, "data/bullet.png");
+    texBulletHit = loadTexture(state.renderer, "data/bullet_hit.png");
   }
 
   void unload() {
