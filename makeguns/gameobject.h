@@ -27,7 +27,7 @@ union ObjectData {
   BulletData bullet;
 };
 
-enum class ObjectType { player, level, enemy };
+enum class ObjectType { player, level, enemy, bullet };
 
 struct GameObject {
   ObjectType type;

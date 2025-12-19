@@ -103,7 +103,7 @@ struct Resources {
 bool initialize(SDLState &state);
 void cleanup(SDLState &state);
 void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
-                float deltaTime);
+                float width, float height, float deltaTime);
 void update(const SDLState &state, GameState &gs, Resources &res,
             GameObject &obj, float deltaTime);
 void createTiles(const SDLState &state, GameState &gs, const Resources &res);
@@ -213,7 +213,23 @@ int main(int argc, char *argv[]) {
     // draw all objects
     for (auto &layer : gs.layers) {
       for (GameObject &obj : layer) {
-        drawObject(state, gs, obj, deltaTime);
+        drawObject(state, gs, obj, TILE_SIZE, TILE_SIZE, deltaTime);
+      }
+    }
+
+    // draw bullets
+    for (GameObject &bullet : gs.bullets) {
+      drawObject(state, gs, bullet, bullet.collider.w, bullet.collider.h,
+                 deltaTime);
+    }
+
+    // update bullets
+    for (GameObject &bullet : gs.bullets) {
+      update(state, gs, res, bullet, deltaTime);
+
+      // update animation
+      if (bullet.currentAnimation != -1) {
+        bullet.animations[bullet.currentAnimation].step(deltaTime);
       }
     }
 
@@ -289,19 +305,17 @@ void cleanup(SDLState &state) {
 }
 
 void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
-                float deltaTime) {
+                float width, float height, float deltaTime) {
 
-  const float spriteSize = 32;
-  float srcX =
-      obj.currentAnimation != -1
-          ? obj.animations[obj.currentAnimation].currentFrame() * spriteSize
-          : 0.0f;
-  SDL_FRect src{.x = srcX, .y = 0, .w = 32, .h = 32};
+  float srcX = obj.currentAnimation != -1
+                   ? obj.animations[obj.currentAnimation].currentFrame() * width
+                   : 0.0f;
+  SDL_FRect src{.x = srcX, .y = 0, .w = width, .h = height};
 
   SDL_FRect dst{.x = obj.position.x - gs.mapViewport.x,
                 .y = obj.position.y,
-                .w = spriteSize,
-                .h = spriteSize};
+                .w = width,
+                .h = height};
 
   SDL_FlipMode flipMode =
       obj.direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
@@ -343,7 +357,7 @@ void update(const SDLState &state, GameState &gs, Resources &res,
 
       } else {
 
-        // decelerate
+        // deaccelerate
         if (obj.velocity.x) {
           const float factor = obj.velocity.x > 0 ? -1.5f : 1.5f;
 
@@ -355,6 +369,23 @@ void update(const SDLState &state, GameState &gs, Resources &res,
             obj.velocity.x += amount;
           }
         }
+      }
+      if (state.keys[SDL_SCANCODE_J]) {
+
+        // spawn some bullets;
+        GameObject bullet;
+        bullet.type = ObjectType::bullet;
+        bullet.direction = gs.player().direction;
+        bullet.texture = res.texBullet;
+        bullet.currentAnimation = res.ANIM_BULLET_MOVING;
+        bullet.collider = SDL_FRect{.x = 0,
+                                    .y = 0,
+                                    .w = static_cast<float>(res.texBullet->h),
+                                    .h = static_cast<float>(res.texBullet->h)};
+        bullet.velocity = glm::vec2(obj.velocity.x + 600.0f, 0);
+        bullet.animations = res.bulletAnims;
+        bullet.position = obj.position;
+        gs.bullets.push_back(bullet);
       }
 
       obj.texture = res.texIdle;
