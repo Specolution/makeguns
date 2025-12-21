@@ -382,7 +382,7 @@ void update(const SDLState &state, GameState &gs, Resources &res,
                                     .y = 0,
                                     .w = static_cast<float>(res.texBullet->h),
                                     .h = static_cast<float>(res.texBullet->h)};
-        bullet.velocity = glm::vec2(obj.velocity.x + 600.0f, 0);
+        bullet.velocity = glm::vec2(obj.velocity.x + 600.0f * obj.direction, 0);
         bullet.animations = res.bulletAnims;
         bullet.position = obj.position;
         gs.bullets.push_back(bullet);
