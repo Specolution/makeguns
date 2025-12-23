@@ -391,7 +391,17 @@ void update(const SDLState &state, GameState &gs, Resources &res,
           bullet.velocity =
               glm::vec2(obj.velocity.x + 600.0f * obj.direction, 0);
           bullet.animations = res.bulletAnims;
-          bullet.position = obj.position;
+
+          // adjust bullet start position
+          const float left = 4;
+          const float right = 24;
+          const float t =
+              (obj.direction + 1) / 2.0f; // results in a value of 0.1
+          const float xOffset =
+              left +
+              right * t; // LERP between left and right based on direction
+          bullet.position = glm::vec2(obj.position.x + xOffset,
+                                      obj.position.y + TILE_SIZE / 2);
           gs.bullets.push_back(bullet);
         }
       }
