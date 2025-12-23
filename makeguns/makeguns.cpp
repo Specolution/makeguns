@@ -348,6 +348,8 @@ void update(const SDLState &state, GameState &gs, Resources &res,
     if (currentDirection) {
       obj.direction = currentDirection;
     }
+    Timer &weaponTimer = obj.data.player.weaponTimer;
+    weaponTimer.step(deltaTime);
 
     switch (obj.data.player.state) {
 
@@ -372,20 +374,26 @@ void update(const SDLState &state, GameState &gs, Resources &res,
       }
       if (state.keys[SDL_SCANCODE_J]) {
 
-        // spawn some bullets;
-        GameObject bullet;
-        bullet.type = ObjectType::bullet;
-        bullet.direction = gs.player().direction;
-        bullet.texture = res.texBullet;
-        bullet.currentAnimation = res.ANIM_BULLET_MOVING;
-        bullet.collider = SDL_FRect{.x = 0,
-                                    .y = 0,
-                                    .w = static_cast<float>(res.texBullet->h),
-                                    .h = static_cast<float>(res.texBullet->h)};
-        bullet.velocity = glm::vec2(obj.velocity.x + 600.0f * obj.direction, 0);
-        bullet.animations = res.bulletAnims;
-        bullet.position = obj.position;
-        gs.bullets.push_back(bullet);
+        if (weaponTimer.hasTimedOut()) {
+          weaponTimer.reset();
+
+          // spawn some bullets;
+          GameObject bullet;
+          bullet.type = ObjectType::bullet;
+          bullet.direction = gs.player().direction;
+          bullet.texture = res.texBullet;
+          bullet.currentAnimation = res.ANIM_BULLET_MOVING;
+          bullet.collider =
+              SDL_FRect{.x = 0,
+                        .y = 0,
+                        .w = static_cast<float>(res.texBullet->h),
+                        .h = static_cast<float>(res.texBullet->h)};
+          bullet.velocity =
+              glm::vec2(obj.velocity.x + 600.0f * obj.direction, 0);
+          bullet.animations = res.bulletAnims;
+          bullet.position = obj.position;
+          gs.bullets.push_back(bullet);
+        }
       }
 
       obj.texture = res.texIdle;

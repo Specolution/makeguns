@@ -10,7 +10,9 @@ enum class BulletState { moving, colliding, inactive };
 
 struct PlayerData {
   PlayerState state;
-  PlayerData() { state = PlayerState::idle; }
+  Timer weaponTimer;
+
+  PlayerData() : weaponTimer(0.1f) { state = PlayerState::idle; }
 };
 
 struct LevelData {};
