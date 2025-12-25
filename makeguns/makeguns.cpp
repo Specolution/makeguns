@@ -352,27 +352,7 @@ void update(const SDLState &state, GameState &gs, Resources &res,
     Timer &weaponTimer = obj.data.player.weaponTimer;
     weaponTimer.step(deltaTime);
 
-    switch (obj.data.player.state) {
-
-    case PlayerState::idle: {
-      if (currentDirection) {
-        obj.data.player.state = PlayerState::running;
-
-      } else {
-
-        // deaccelerate
-        if (obj.velocity.x) {
-          const float factor = obj.velocity.x > 0 ? -1.5f : 1.5f;
-
-          float amount = factor * obj.acceleration.x * deltaTime;
-          if (std::abs(obj.velocity.x) < std::abs(amount)) {
-
-            obj.velocity.x = 0;
-          } else {
-            obj.velocity.x += amount;
-          }
-        }
-      }
+    const auto handleShooting = [&state, &gs, &res, &obj, &weaponTimer]() {
       if (state.keys[SDL_SCANCODE_J]) {
 
         if (weaponTimer.hasTimedOut()) {
@@ -406,6 +386,31 @@ void update(const SDLState &state, GameState &gs, Resources &res,
           gs.bullets.push_back(bullet);
         }
       }
+    };
+
+    switch (obj.data.player.state) {
+
+    case PlayerState::idle: {
+      if (currentDirection) {
+        obj.data.player.state = PlayerState::running;
+
+      } else {
+
+        // deaccelerate
+        if (obj.velocity.x) {
+          const float factor = obj.velocity.x > 0 ? -1.5f : 1.5f;
+
+          float amount = factor * obj.acceleration.x * deltaTime;
+          if (std::abs(obj.velocity.x) < std::abs(amount)) {
+
+            obj.velocity.x = 0;
+          } else {
+            obj.velocity.x += amount;
+          }
+        }
+      }
+
+      handleShooting();
 
       obj.texture = res.texIdle;
       obj.currentAnimation = res.ANIM_PLAYER_IDLE;
@@ -414,9 +419,13 @@ void update(const SDLState &state, GameState &gs, Resources &res,
 
     case PlayerState::running: {
 
+      // switching to idle state
+
       if (!currentDirection) {
         obj.data.player.state = PlayerState::idle;
       }
+
+      handleShooting();
 
       // moving in opposite direction of velocity, sliding!
 
@@ -434,6 +443,8 @@ void update(const SDLState &state, GameState &gs, Resources &res,
     }
 
     case PlayerState::jumping: {
+
+      handleShooting();
 
       obj.texture = res.texRun;
       obj.currentAnimation = res.ANIM_PLAYER_RUN;
