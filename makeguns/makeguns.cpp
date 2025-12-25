@@ -246,8 +246,9 @@ int main(int argc, char *argv[]) {
     SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
     SDL_RenderDebugText(
         state.renderer, 5, 5,
-        std::format("State: {}",
-                    static_cast<int>(gs.player().data.player.state))
+        std::format("S: {}, B: {}, G: {}",
+                    static_cast<int>(gs.player().data.player.state),
+                    gs.bullets.size(), gs.player().grounded)
             .c_str());
 
     // swap buffers and present
