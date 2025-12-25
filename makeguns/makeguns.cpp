@@ -52,6 +52,8 @@ struct Resources {
   const int ANIM_PLAYER_IDLE = 0;
   const int ANIM_PLAYER_RUN = 1;
   const int ANIM_PLAYER_SLIDE = 2;
+  const int ANIM_PLAYER_SHOOT = 3;
+  const int ANIM_PLAYER_SLIDE_SHOOT = 4;
   std::vector<Animation> playerAnims;
   const int ANIM_BULLET_MOVING = 0;
   const int ANIM_BULLET_HIT = 1;
@@ -59,7 +61,8 @@ struct Resources {
 
   std::vector<SDL_Texture *> textures;
   SDL_Texture *texIdle, *texRun, *texBrick, *texGrass, *texGround, *texPanel,
-      *texSlide, *texBg1, *texBg2, *texBg3, *texBg4, *texBullet, *texBulletHit;
+      *texSlide, *texBg1, *texBg2, *texBg3, *texBg4, *texBullet, *texBulletHit,
+      *texShoot, *texRunShoot, *texSlideShoot;
 
   SDL_Texture *loadTexture(SDL_Renderer *renderer,
                            const std::string &filepath) {
@@ -74,6 +77,8 @@ struct Resources {
     playerAnims[ANIM_PLAYER_IDLE] = Animation(8, 1.6f);
     playerAnims[ANIM_PLAYER_RUN] = Animation(4, 0.5f);
     playerAnims[ANIM_PLAYER_SLIDE] = Animation(1, 1.0f);
+    playerAnims[ANIM_PLAYER_SHOOT] = Animation(4, 0.5f);
+    playerAnims[ANIM_PLAYER_SLIDE_SHOOT] = Animation(4, 0.5f);
     bulletAnims.resize(2);
     bulletAnims[ANIM_BULLET_MOVING] = Animation(4, 0.05f);
     bulletAnims[ANIM_BULLET_HIT] = Animation(4, 0.15f);
@@ -90,6 +95,9 @@ struct Resources {
     texBg4 = loadTexture(state.renderer, "data/bg/bg_layer4.png");
     texBullet = loadTexture(state.renderer, "data/bullet.png");
     texBulletHit = loadTexture(state.renderer, "data/bullet_hit.png");
+    texShoot = loadTexture(state.renderer, "data/shoot.png");
+    texRunShoot = loadTexture(state.renderer, "data/shoot_run.png");
+    texSlideShoot = loadTexture(state.renderer, "data/slide_shoot.png");
   }
 
   void unload() {
@@ -352,8 +360,14 @@ void update(const SDLState &state, GameState &gs, Resources &res,
     Timer &weaponTimer = obj.data.player.weaponTimer;
     weaponTimer.step(deltaTime);
 
-    const auto handleShooting = [&state, &gs, &res, &obj, &weaponTimer]() {
+    const auto handleShooting = [&state, &gs, &res, &obj, &weaponTimer](
+                                    SDL_Texture *tex, SDL_Texture *shootTex,
+                                    int animIndex, int shootAnimIndex) {
       if (state.keys[SDL_SCANCODE_J]) {
+
+        // set shooting tex/anim
+        obj.texture = shootTex;
+        obj.currentAnimation = shootAnimIndex;
 
         if (weaponTimer.hasTimedOut()) {
           weaponTimer.reset();
@@ -385,6 +399,10 @@ void update(const SDLState &state, GameState &gs, Resources &res,
                                       obj.position.y + TILE_SIZE / 2);
           gs.bullets.push_back(bullet);
         }
+      } else {
+
+        obj.texture = tex;
+        obj.currentAnimation = animIndex;
       }
     };
 
@@ -410,10 +428,9 @@ void update(const SDLState &state, GameState &gs, Resources &res,
         }
       }
 
-      handleShooting();
+      handleShooting(res.texIdle, res.texShoot, res.ANIM_PLAYER_IDLE,
+                     res.ANIM_PLAYER_SHOOT);
 
-      obj.texture = res.texIdle;
-      obj.currentAnimation = res.ANIM_PLAYER_IDLE;
       break;
     }
 
@@ -425,16 +442,17 @@ void update(const SDLState &state, GameState &gs, Resources &res,
         obj.data.player.state = PlayerState::idle;
       }
 
-      handleShooting();
-
       // moving in opposite direction of velocity, sliding!
 
       if (obj.velocity.x * obj.direction < 0 && obj.grounded) {
 
-        obj.texture = res.texSlide;
-        obj.currentAnimation = res.ANIM_PLAYER_SLIDE;
+        handleShooting(res.texSlide, res.texSlideShoot, res.ANIM_PLAYER_SLIDE,
+                       res.ANIM_PLAYER_SLIDE_SHOOT);
 
       } else {
+
+        handleShooting(res.texRun, res.texRunShoot, res.ANIM_PLAYER_RUN,
+                       res.ANIM_PLAYER_RUN);
 
         obj.texture = res.texRun;
         obj.currentAnimation = res.ANIM_PLAYER_RUN;
@@ -444,10 +462,8 @@ void update(const SDLState &state, GameState &gs, Resources &res,
 
     case PlayerState::jumping: {
 
-      handleShooting();
-
-      obj.texture = res.texRun;
-      obj.currentAnimation = res.ANIM_PLAYER_RUN;
+      handleShooting(res.texRun, res.texRunShoot, res.ANIM_PLAYER_RUN,
+                     res.ANIM_PLAYER_RUN);
       break;
     }
     }
