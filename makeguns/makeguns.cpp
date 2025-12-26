@@ -35,6 +35,7 @@ struct GameState {
   int playerIndex;
   SDL_FRect mapViewport;
   float bg2Scroll, bg3Scroll, bg4Scroll;
+  bool debugMode;
 
   GameState(const SDLState &state) {
     playerIndex = -1; // WILL CHANGE THIS WHEN WE LOAD MAPS
@@ -43,6 +44,7 @@ struct GameState {
                             .w = static_cast<float>(state.logW),
                             .h = static_cast<float>(state.logH)};
     bg2Scroll = bg3Scroll = bg4Scroll = 0;
+    debugMode = false;
   }
 
   GameObject &player() { return layers[LAYER_IDX_CHARACTERS][playerIndex]; };
@@ -174,6 +176,9 @@ int main(int argc, char *argv[]) {
 
       case SDL_EVENT_KEY_UP: {
         handleKeyInput(state, gs, gs.player(), event.key.scancode, false);
+        if (event.key.scancode == SDL_SCANCODE_F) {
+          gs.debugMode = !gs.debugMode;
+        }
         break;
       }
       }
@@ -250,14 +255,17 @@ int main(int argc, char *argv[]) {
       SDL_RenderTexture(state.renderer, obj.texture, nullptr, &dst);
     }
 
-    // display some debug info
-    SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
-    SDL_RenderDebugText(
-        state.renderer, 5, 5,
-        std::format("S: {}, B: {}, G: {}",
-                    static_cast<int>(gs.player().data.player.state),
-                    gs.bullets.size(), gs.player().grounded)
-            .c_str());
+    if (gs.debugMode) {
+
+      // display some debug info
+      SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+      SDL_RenderDebugText(
+          state.renderer, 5, 5,
+          std::format("S: {}, B: {}, G: {}",
+                      static_cast<int>(gs.player().data.player.state),
+                      gs.bullets.size(), gs.player().grounded)
+              .c_str());
+    }
 
     // swap buffers and present
     SDL_RenderPresent(state.renderer);
@@ -331,6 +339,19 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
 
   SDL_RenderTextureRotated(state.renderer, obj.texture, &src, &dst, 0, nullptr,
                            flipMode);
+
+  if (gs.debugMode) {
+
+    SDL_FRect rectA{.x = obj.position.x + obj.collider.x - gs.mapViewport.x,
+                    .y = obj.position.y + obj.collider.y,
+                    .w = obj.collider.w,
+                    .h = obj.collider.h};
+
+    SDL_SetRenderDrawBlendMode(state.renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(state.renderer, 255, 0, 0, 155);
+    SDL_RenderFillRect(state.renderer, &rectA);
+    SDL_SetRenderDrawBlendMode(state.renderer, SDL_BLENDMODE_NONE);
+  }
 }
 
 void update(const SDLState &state, GameState &gs, Resources &res,
