@@ -361,10 +361,9 @@ void update(const SDLState &state, GameState &gs, Resources &res,
   if (obj.dynamic && !obj.grounded) {
     obj.velocity += glm::vec2(0, 500) * deltaTime;
   }
+  float currentDirection = 0;
 
   if (obj.type == ObjectType::player) {
-
-    float currentDirection = 0;
 
     if (state.keys[SDL_SCANCODE_A]) {
 
@@ -375,9 +374,6 @@ void update(const SDLState &state, GameState &gs, Resources &res,
       currentDirection += 1;
     }
 
-    if (currentDirection) {
-      obj.direction = currentDirection;
-    }
     Timer &weaponTimer = obj.data.player.weaponTimer;
     weaponTimer.step(deltaTime);
 
@@ -406,6 +402,7 @@ void update(const SDLState &state, GameState &gs, Resources &res,
                         .h = static_cast<float>(res.texBullet->h)};
           bullet.velocity =
               glm::vec2(obj.velocity.x + 600.0f * obj.direction, 0);
+          bullet.maxSpeedX = 1000.0f;
           bullet.animations = res.bulletAnims;
 
           // adjust bullet start position
@@ -488,12 +485,16 @@ void update(const SDLState &state, GameState &gs, Resources &res,
       break;
     }
     }
+  }
 
-    // add acceleration to velocity
-    obj.velocity += currentDirection * obj.acceleration * deltaTime;
-    if (std::abs(obj.velocity.x) > obj.maxSpeedX) {
-      obj.velocity.x = currentDirection * obj.maxSpeedX;
-    }
+  if (currentDirection) {
+    obj.direction = currentDirection;
+  }
+
+  // add acceleration to velocity
+  obj.velocity += currentDirection * obj.acceleration * deltaTime;
+  if (std::abs(obj.velocity.x) > obj.maxSpeedX) {
+    obj.velocity.x = currentDirection * obj.maxSpeedX;
   }
 
   // add velocity to position
