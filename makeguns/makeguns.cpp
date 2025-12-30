@@ -415,7 +415,23 @@ void update(const SDLState &state, GameState &gs, Resources &res,
               right * t; // LERP between left and right based on direction
           bullet.position = glm::vec2(obj.position.x + xOffset,
                                       obj.position.y + TILE_SIZE / 2);
-          gs.bullets.push_back(bullet);
+
+          // look for an inactive slot
+          bool foundInactive = false;
+          for (int i = 0; i < gs.bullets.size() && !foundInactive; i++) {
+
+            if (gs.bullets[i].data.bullet.state == BulletState::inactive) {
+
+              foundInactive = true;
+              gs.bullets[i] = bullet;
+            }
+          };
+
+          // if no inactive slot was found, push a new bullet
+          if (!foundInactive) {
+
+            gs.bullets.push_back(bullet);
+          }
         }
       } else {
 
