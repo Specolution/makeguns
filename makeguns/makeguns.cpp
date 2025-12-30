@@ -503,6 +503,16 @@ void update(const SDLState &state, GameState &gs, Resources &res,
     }
   }
 
+  else if (obj.type == ObjectType::bullet) {
+
+    // Check if bullet is off-screen (left or right)
+    float screenX = obj.position.x - gs.mapViewport.x;
+
+    if (screenX < 0 || screenX > gs.mapViewport.w) {
+      obj.data.bullet.state = BulletState::inactive;
+    }
+  }
+
   if (currentDirection) {
     obj.direction = currentDirection;
   }
