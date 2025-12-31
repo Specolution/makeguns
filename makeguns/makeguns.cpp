@@ -505,10 +505,11 @@ void update(const SDLState &state, GameState &gs, Resources &res,
 
   else if (obj.type == ObjectType::bullet) {
 
-    // Check if bullet is off-screen (left or right)
-    float screenX = obj.position.x - gs.mapViewport.x;
-
-    if (screenX < 0 || screenX > gs.mapViewport.w) {
+    if (obj.position.x - gs.mapViewport.x < 0 ||          // left edge
+        obj.position.x - gs.mapViewport.x > state.logW || // right edge
+        obj.position.y - gs.mapViewport.y < 0 ||          // top edge
+        obj.position.y - gs.mapViewport.y > state.logH    // bottom edge
+    ) {
       obj.data.bullet.state = BulletState::inactive;
     }
   }
@@ -600,6 +601,18 @@ void collisionResponse(const SDLState &state, GameState &gs, const Resources,
       break;
     }
     }
+  }
+
+  else if (objA.type == ObjectType::bullet) {
+  
+      switch (objA.data.bullet.state) {
+    case BulletState::moving: {
+        objA.velocity *= 0;
+      break;
+
+    }
+  }
+  
   }
 }
 
