@@ -232,8 +232,11 @@ int main(int argc, char *argv[]) {
 
     // draw bullets
     for (GameObject &bullet : gs.bullets) {
-      drawObject(state, gs, bullet, bullet.collider.w, bullet.collider.h,
-                 deltaTime);
+      if (bullet.data.bullet.state != BulletState::inactive) {
+
+        drawObject(state, gs, bullet, bullet.collider.w, bullet.collider.h,
+                   deltaTime);
+      }
     }
 
     // update bullets
@@ -505,13 +508,24 @@ void update(const SDLState &state, GameState &gs, Resources &res,
   }
 
   else if (obj.type == ObjectType::bullet) {
+    switch (obj.data.bullet.state) {
+    case BulletState::moving: {
 
-    if (obj.position.x - gs.mapViewport.x < 0 ||          // left edge
-        obj.position.x - gs.mapViewport.x > state.logW || // right edge
-        obj.position.y - gs.mapViewport.y < 0 ||          // top edge
-        obj.position.y - gs.mapViewport.y > state.logH    // bottom edge
-    ) {
-      obj.data.bullet.state = BulletState::inactive;
+      if (obj.position.x - gs.mapViewport.x < 0 ||          // left edge
+          obj.position.x - gs.mapViewport.x > state.logW || // right edge
+          obj.position.y - gs.mapViewport.y < 0 ||          // top edge
+          obj.position.y - gs.mapViewport.y > state.logH    // bottom edge
+      ) {
+        obj.data.bullet.state = BulletState::inactive;
+      }
+      break;
+    }
+    case BulletState::colliding: {
+      if (obj.animations[obj.currentAnimation].isDone()) {
+        obj.data.bullet.state = BulletState::inactive;
+      }
+      break;
+    }
     }
   }
 
@@ -567,38 +581,42 @@ void update(const SDLState &state, GameState &gs, Resources &res,
   }
 }
 
-void collisionResponse(const SDLState &state, GameState &gs, const Resources,
-                       const SDL_FRect &rectA, const SDL_FRect &rectB,
-                       const SDL_FRect &rectC, GameObject &objA,
-                       GameObject &objB, float deltaTime) {
+void collisionResponse(const SDLState &state, GameState &gs,
+                       const Resources &res, const SDL_FRect &rectA,
+                       const SDL_FRect &rectB, const SDL_FRect &rectC,
+                       GameObject &objA, GameObject &objB, float deltaTime) {
+
+  const auto genericResponse = [&]() {
+    if (rectC.w < rectC.h) {
+      // horizontal collision
+      if (objA.velocity.x > 0) // going right
+      {
+        objA.position.x -= rectC.w;
+      } else if (objA.velocity.x < 0) // going left
+      {
+
+        objA.position.x += rectC.w;
+      }
+
+      objA.velocity.x = 0;
+    } else {
+
+      // vertical collision
+      if (objA.velocity.y > 0) {
+
+        objA.position.y -= rectC.h; // going down
+        objA.velocity.y = 0;
+      }
+    }
+  };
+
   // object we are checking
   if (objA.type == ObjectType::player) {
 
     // object it is colliding with
     switch (objB.type) {
     case ObjectType::level: {
-
-      if (rectC.w < rectC.h) {
-        // horizontal collision
-        if (objA.velocity.x > 0) // going right
-        {
-          objA.position.x -= rectC.w;
-        } else if (objA.velocity.x < 0) // going left
-        {
-
-          objA.position.x += rectC.w;
-        }
-
-        objA.velocity.x = 0;
-      } else {
-
-        // vertical collision
-        if (objA.velocity.y > 0) {
-
-          objA.position.y -= rectC.h; // going down
-          objA.velocity.y = 0;
-        }
-      }
+      genericResponse();
       break;
     }
     }
@@ -608,7 +626,10 @@ void collisionResponse(const SDLState &state, GameState &gs, const Resources,
 
     switch (objA.data.bullet.state) {
     case BulletState::moving: {
-      objA.velocity *= 0;
+      genericResponse();
+      objA.data.bullet.state = BulletState::colliding;
+      objA.texture = res.texBulletHit;
+      objA.currentAnimation = res.ANIM_BULLET_HIT;
       break;
     }
     }

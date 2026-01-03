@@ -11,3 +11,5 @@ int Animation::currentFrame() const {
 }
 
 void Animation::step(float deltaTime) { timer.step(deltaTime); };
+
+bool Animation::isDone() const { return timer.hasTimedOut(); }

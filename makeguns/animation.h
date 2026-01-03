@@ -11,6 +11,7 @@ public:
   Animation(int frameCount, float length);
 
   float getLength() const;
-  int currentFrame() const;  
+  int currentFrame() const;
   void step(float deltaTime);
+  bool isDone() const;
 };
