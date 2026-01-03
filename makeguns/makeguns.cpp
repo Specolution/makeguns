@@ -391,6 +391,7 @@ void update(const SDLState &state, GameState &gs, Resources &res,
 
           // spawn some bullets;
           GameObject bullet;
+          bullet.data.bullet = BulletData();
           bullet.type = ObjectType::bullet;
           bullet.direction = gs.player().direction;
           bullet.texture = res.texBullet;
@@ -604,15 +605,13 @@ void collisionResponse(const SDLState &state, GameState &gs, const Resources,
   }
 
   else if (objA.type == ObjectType::bullet) {
-  
-      switch (objA.data.bullet.state) {
-    case BulletState::moving: {
-        objA.velocity *= 0;
-      break;
 
+    switch (objA.data.bullet.state) {
+    case BulletState::moving: {
+      objA.velocity *= 0;
+      break;
     }
-  }
-  
+    }
   }
 }
 
