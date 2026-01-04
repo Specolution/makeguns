@@ -671,13 +671,21 @@ void collisionResponse(const SDLState &state, GameState &gs,
       }
 
       case ObjectType::enemy: {
-
+        EnemyData &d = objB.data.enemy;
         objB.direction = -objA.direction;
         objB.shouldFlash = true;
         objB.flashTimer.reset();
         objB.texture = res.texEnemyHit;
         objB.currentAnimation = res.ANIM_ENEMY_HIT;
-        objB.data.enemy.state = EnemyState::damaged;
+        d.state = EnemyState::damaged;
+        // damage the enemy and flag dead if needed
+        d.healthPoints -= 10;
+
+        if (d.healthPoints <= 0) {
+          d.state = EnemyState::dead;
+          objB.texture = res.texEnemyDie;
+          objB.currentAnimation = res.ANIM_ENEMY_DIE;
+        }
         break;
       }
       }

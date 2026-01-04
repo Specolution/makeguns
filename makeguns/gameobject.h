@@ -21,7 +21,11 @@ struct LevelData {};
 struct EnemyData {
   EnemyState state;
   Timer damagedTimer;
-  EnemyData() : state(EnemyState::shambling), damagedTimer(0.5f) {}
+  int healthPoints;
+
+  EnemyData() : state(EnemyState::shambling), damagedTimer(0.5f) {
+    healthPoints = 100;
+  }
 };
 struct BulletData {
   BulletState state;
