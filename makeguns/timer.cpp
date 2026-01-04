@@ -2,7 +2,7 @@
 
 Timer::Timer(float length) : length(length), time(0), timeout(false) {};
 
-void Timer::step(float deltaTime) {
+bool Timer::step(float deltaTime) {
   timeout = false;
   time += deltaTime;
 
@@ -10,7 +10,9 @@ void Timer::step(float deltaTime) {
 
     time -= length;
     timeout = true;
+    return true;
   }
+  return false;
 }
 
 float Timer::getTime() const { return time; }

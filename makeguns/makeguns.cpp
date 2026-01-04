@@ -352,9 +352,21 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
 
   SDL_FlipMode flipMode =
       obj.direction == -1 ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+  if (!obj.shouldFlash) {
+    SDL_RenderTextureRotated(state.renderer, obj.texture, &src, &dst, 0,
+                             nullptr, flipMode);
+  } else {
 
-  SDL_RenderTextureRotated(state.renderer, obj.texture, &src, &dst, 0, nullptr,
-                           flipMode);
+    // flash object with a redish tint
+    SDL_SetTextureColorModFloat(obj.texture, 2.5f, 1.0f, 1.0f);
+    SDL_RenderTextureRotated(state.renderer, obj.texture, &src, &dst, 0,
+                             nullptr, flipMode);
+    SDL_SetTextureColorModFloat(obj.texture, 1.0f, 1.0f, 1.0f);
+  }
+
+  if (obj.flashTimer.step(deltaTime)) {
+    obj.shouldFlash = false;
+  }
 
   if (gs.debugMode) {
 
@@ -641,6 +653,19 @@ void collisionResponse(const SDLState &state, GameState &gs,
 
     switch (objA.data.bullet.state) {
     case BulletState::moving: {
+      switch (objB.type) {
+      case ObjectType::level: {
+        break;
+      }
+
+      case ObjectType::enemy: {
+
+        objB.direction = -objA.direction;
+        objB.shouldFlash = true;
+        objB.flashTimer.reset();
+        break;
+      }
+      }
       genericResponse();
       objA.velocity *= 0;
       objA.data.bullet.state = BulletState::colliding;
@@ -760,11 +785,11 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res) {
 
         {
 
-          GameObject o = createObject(r, c, res.texEnemy, ObjectType::level);
+          GameObject o = createObject(r, c, res.texEnemy, ObjectType::enemy);
           o.currentAnimation = res.ANIM_ENEMY;
           o.animations = res.enemeyAnims;
           o.collider = SDL_FRect{.x = 10, .y = 4, .w = 12, .h = 28};
-          gs.layers[LAYER_IDX_LEVEL].push_back(o);
+          gs.layers[LAYER_IDX_CHARACTERS].push_back(o);
           break;
         }
 
