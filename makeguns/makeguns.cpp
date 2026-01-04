@@ -202,11 +202,6 @@ int main(int argc, char *argv[]) {
       for (GameObject &obj : layer) {
 
         update(state, gs, res, obj, deltaTime);
-
-        // update the animation
-        if (obj.currentAnimation != -1) {
-          obj.animations[obj.currentAnimation].step(deltaTime);
-        }
       }
     }
 
@@ -255,11 +250,6 @@ int main(int argc, char *argv[]) {
     // update bullets
     for (GameObject &bullet : gs.bullets) {
       update(state, gs, res, bullet, deltaTime);
-
-      // update animation
-      if (bullet.currentAnimation != -1) {
-        bullet.animations[bullet.currentAnimation].step(deltaTime);
-      }
     }
 
     // draw foreground tiles
@@ -342,7 +332,7 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
 
   float srcX = obj.currentAnimation != -1
                    ? obj.animations[obj.currentAnimation].currentFrame() * width
-                   : 0.0f;
+                   : (obj.spriteFrame - 1) * width;
   SDL_FRect src{.x = srcX, .y = 0, .w = width, .h = height};
 
   SDL_FRect dst{.x = obj.position.x - gs.mapViewport.x,
@@ -384,6 +374,11 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj,
 
 void update(const SDLState &state, GameState &gs, Resources &res,
             GameObject &obj, float deltaTime) {
+
+  // update animation
+  if (obj.currentAnimation != -1) {
+    obj.animations[obj.currentAnimation].step(deltaTime);
+  }
 
   // apply some gravity
   if (obj.dynamic && !obj.grounded) {
@@ -557,16 +552,32 @@ void update(const SDLState &state, GameState &gs, Resources &res,
   }
 
   else if (obj.type == ObjectType::enemy) {
+    EnemyData &d = obj.data.enemy;
 
-    switch (obj.data.enemy.state) {
-    case EnemyState::damaged:
-      if (obj.data.enemy.damagedTimer.step(deltaTime)) {
-        obj.data.enemy.state = EnemyState::shambling;
+    switch (d.state) {
+    case EnemyState::damaged: {
+      if (d.damagedTimer.step(deltaTime)) {
+        d.state = EnemyState::shambling;
         obj.texture = res.texEnemy;
         obj.currentAnimation = res.ANIM_ENEMY;
       }
+      break;
     }
-  }
+
+    case EnemyState::dead: {
+
+      if (obj.currentAnimation != -1 &&
+          obj.animations[obj.currentAnimation].isDone()) {
+
+        // remove animation and set to last frame
+        obj.currentAnimation = -1;
+        obj.spriteFrame = 18;
+      }
+
+      break;
+    }
+    }
+  };
 
   if (currentDirection) {
     obj.direction = currentDirection;
