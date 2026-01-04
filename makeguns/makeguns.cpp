@@ -60,11 +60,16 @@ struct Resources {
   const int ANIM_BULLET_MOVING = 0;
   const int ANIM_BULLET_HIT = 1;
   std::vector<Animation> bulletAnims;
+  const int ANIM_ENEMY = 0;
+  const int ANIM_ENEMY_HIT = 1;
+  const int ANIM_ENEMY_DIE = 2;
+  std::vector<Animation> enemeyAnims;
 
   std::vector<SDL_Texture *> textures;
   SDL_Texture *texIdle, *texRun, *texBrick, *texGrass, *texGround, *texPanel,
       *texSlide, *texBg1, *texBg2, *texBg3, *texBg4, *texBullet, *texBulletHit,
-      *texShoot, *texRunShoot, *texSlideShoot;
+      *texShoot, *texRunShoot, *texSlideShoot, *texEnemy, *texEnemyHit,
+      *texEnemyDie;
 
   SDL_Texture *loadTexture(SDL_Renderer *renderer,
                            const std::string &filepath) {
@@ -84,6 +89,11 @@ struct Resources {
     bulletAnims.resize(2);
     bulletAnims[ANIM_BULLET_MOVING] = Animation(4, 0.05f);
     bulletAnims[ANIM_BULLET_HIT] = Animation(4, 0.15f);
+    enemeyAnims.resize(3);
+    enemeyAnims[ANIM_ENEMY] = Animation(8, 1.0f);
+    enemeyAnims[ANIM_ENEMY_HIT] = Animation(8, 1.0f);
+    enemeyAnims[ANIM_ENEMY_DIE] = Animation(18, 2.0f);
+
     texIdle = loadTexture(state.renderer, "data/idle.png");
     texSlide = loadTexture(state.renderer, "data/slide.png");
     texRun = loadTexture(state.renderer, "data/run.png");
@@ -100,6 +110,9 @@ struct Resources {
     texShoot = loadTexture(state.renderer, "data/shoot.png");
     texRunShoot = loadTexture(state.renderer, "data/shoot_run.png");
     texSlideShoot = loadTexture(state.renderer, "data/slide_shoot.png");
+    texEnemy = loadTexture(state.renderer, "data/enemy.png");
+    texEnemyHit = loadTexture(state.renderer, "data/enemy_hit.png");
+    texEnemyDie = loadTexture(state.renderer, "data/enemy_die.png");
   }
 
   void unload() {
@@ -673,9 +686,9 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res) {
   short map[MAP_ROWS][MAP_COLS] = {
       4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2,
       2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 3, 0, 0, 0, 0, 0, 0, 2, 0, 0,
       0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 2, 2, 2, 0, 2, 2,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 0, 2, 2, 2, 2, 0, 2, 2,
       2, 0, 0, 0, 2, 2, 2, 2, 0, 0, 2, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 0, 0, 0, 0,
       0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0,
@@ -743,11 +756,14 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res) {
           break;
         }
 
-        case 3: // panel
+        case 3: // enemy
 
         {
 
-          GameObject o = createObject(r, c, res.texGrass, ObjectType::level);
+          GameObject o = createObject(r, c, res.texEnemy, ObjectType::level);
+          o.currentAnimation = res.ANIM_ENEMY;
+          o.animations = res.enemeyAnims;
+          o.collider = SDL_FRect{.x = 10, .y = 4, .w = 12, .h = 28};
           gs.layers[LAYER_IDX_LEVEL].push_back(o);
           break;
         }
