@@ -663,6 +663,8 @@ void collisionResponse(const SDLState &state, GameState &gs,
 
   else if (objA.type == ObjectType::bullet) {
 
+    bool passthrough = false;
+
     switch (objA.data.bullet.state) {
     case BulletState::moving: {
       switch (objB.type) {
@@ -672,28 +674,39 @@ void collisionResponse(const SDLState &state, GameState &gs,
 
       case ObjectType::enemy: {
         EnemyData &d = objB.data.enemy;
-        objB.direction = -objA.direction;
-        objB.shouldFlash = true;
-        objB.flashTimer.reset();
-        objB.texture = res.texEnemyHit;
-        objB.currentAnimation = res.ANIM_ENEMY_HIT;
-        d.state = EnemyState::damaged;
-        // damage the enemy and flag dead if needed
-        d.healthPoints -= 10;
 
-        if (d.healthPoints <= 0) {
-          d.state = EnemyState::dead;
-          objB.texture = res.texEnemyDie;
-          objB.currentAnimation = res.ANIM_ENEMY_DIE;
+        if (d.state != EnemyState::dead) {
+
+          objB.direction = -objA.direction;
+          objB.shouldFlash = true;
+          objB.flashTimer.reset();
+          objB.texture = res.texEnemyHit;
+          objB.currentAnimation = res.ANIM_ENEMY_HIT;
+          d.state = EnemyState::damaged;
+          // damage the enemy and flag dead if needed
+          d.healthPoints -= 10;
+
+          if (d.healthPoints <= 0) {
+            d.state = EnemyState::dead;
+            objB.texture = res.texEnemyDie;
+            objB.currentAnimation = res.ANIM_ENEMY_DIE;
+          }
+        } else {
+          passthrough = true;
         }
+
         break;
       }
       }
-      genericResponse();
-      objA.velocity *= 0;
-      objA.data.bullet.state = BulletState::colliding;
-      objA.texture = res.texBulletHit;
-      objA.currentAnimation = res.ANIM_BULLET_HIT;
+
+      if (!passthrough) {
+
+        genericResponse();
+        objA.velocity *= 0;
+        objA.data.bullet.state = BulletState::colliding;
+        objA.texture = res.texBulletHit;
+        objA.currentAnimation = res.ANIM_BULLET_HIT;
+      }
       break;
     }
     }
