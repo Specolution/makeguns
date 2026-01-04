@@ -556,6 +556,18 @@ void update(const SDLState &state, GameState &gs, Resources &res,
     }
   }
 
+  else if (obj.type == ObjectType::enemy) {
+
+    switch (obj.data.enemy.state) {
+    case EnemyState::damaged:
+      if (obj.data.enemy.damagedTimer.step(deltaTime)) {
+        obj.data.enemy.state = EnemyState::shambling;
+        obj.texture = res.texEnemy;
+        obj.currentAnimation = res.ANIM_ENEMY;
+      }
+    }
+  }
+
   if (currentDirection) {
     obj.direction = currentDirection;
   }
@@ -663,6 +675,9 @@ void collisionResponse(const SDLState &state, GameState &gs,
         objB.direction = -objA.direction;
         objB.shouldFlash = true;
         objB.flashTimer.reset();
+        objB.texture = res.texEnemyHit;
+        objB.currentAnimation = res.ANIM_ENEMY_HIT;
+        objB.data.enemy.state = EnemyState::damaged;
         break;
       }
       }
@@ -786,6 +801,7 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res) {
         {
 
           GameObject o = createObject(r, c, res.texEnemy, ObjectType::enemy);
+          o.data.enemy = EnemyData();
           o.currentAnimation = res.ANIM_ENEMY;
           o.animations = res.enemeyAnims;
           o.collider = SDL_FRect{.x = 10, .y = 4, .w = 12, .h = 28};

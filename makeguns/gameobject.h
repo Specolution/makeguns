@@ -20,7 +20,8 @@ struct PlayerData {
 struct LevelData {};
 struct EnemyData {
   EnemyState state;
-  EnemyData() : state(EnemyState::shambling) {}
+  Timer damagedTimer;
+  EnemyData() : state(EnemyState::shambling), damagedTimer(0.5f) {}
 };
 struct BulletData {
   BulletState state;
