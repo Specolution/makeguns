@@ -555,6 +555,22 @@ void update(const SDLState &state, GameState &gs, Resources &res,
     EnemyData &d = obj.data.enemy;
 
     switch (d.state) {
+
+    case EnemyState::shambling: {
+
+      glm::vec2 playerDir = gs.player().position - obj.position;
+
+      if (glm::length(playerDir) < 100) {
+        currentDirection = playerDir.x < 0 ? -1 : 1;
+        obj.acceleration = glm::vec2(30, 0);
+      } else {
+        obj.acceleration = glm::vec2(0);
+        obj.velocity.x = 0;
+      }
+
+      break;
+    }
+
     case EnemyState::damaged: {
       if (d.damagedTimer.step(deltaTime)) {
         d.state = EnemyState::shambling;
@@ -565,6 +581,7 @@ void update(const SDLState &state, GameState &gs, Resources &res,
     }
 
     case EnemyState::dead: {
+      obj.velocity.x = 0;
 
       if (obj.currentAnimation != -1 &&
           obj.animations[obj.currentAnimation].isDone()) {
@@ -868,6 +885,7 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res) {
           o.currentAnimation = res.ANIM_ENEMY;
           o.animations = res.enemeyAnims;
           o.collider = SDL_FRect{.x = 10, .y = 4, .w = 12, .h = 28};
+          o.maxSpeedX = 15;
           o.dynamic = true;
           gs.layers[LAYER_IDX_CHARACTERS].push_back(o);
           break;
