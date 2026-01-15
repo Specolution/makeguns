@@ -4,7 +4,8 @@
 #include "gameobject.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-#include <SDL3_image/SDL_image.h >
+#include <SDL3_image/SDL_image.h>
+#include <SDL3_mixer/SDL_mixer.h>
 #include <array>
 #include <format>
 #include <string>
@@ -71,6 +72,11 @@ struct Resources {
       *texShoot, *texRunShoot, *texSlideShoot, *texEnemy, *texEnemyHit,
       *texEnemyDie;
 
+  MIX_Mixer *mixer;
+  std::vector<MIX_Track *> sfxTracks;
+  MIX_Audio *sfxShoot;
+  MIX_Audio *sfxWallHit;
+
   SDL_Texture *loadTexture(SDL_Renderer *renderer,
                            const std::string &filepath) {
     SDL_Texture *tex = IMG_LoadTexture(renderer, filepath.c_str());
@@ -93,6 +99,56 @@ struct Resources {
     enemeyAnims[ANIM_ENEMY] = Animation(8, 1.0f);
     enemeyAnims[ANIM_ENEMY_HIT] = Animation(8, 1.0f);
     enemeyAnims[ANIM_ENEMY_DIE] = Animation(18, 2.0f);
+
+    // Initialize audio (non-fatal)
+    mixer = nullptr;
+    sfxShoot = nullptr;
+    sfxWallHit = nullptr;
+
+    if (MIX_Init()) {
+      // Open the default audio playback device
+      SDL_AudioSpec spec;
+      spec.freq = 44100;
+      spec.format = SDL_AUDIO_F32; // Float32 format
+      spec.channels = 2;           // Stereo
+
+      SDL_AudioDeviceID audioDevice =
+          SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec);
+
+      if (audioDevice) {
+        // Now create mixer with the opened device
+        mixer = MIX_CreateMixerDevice(audioDevice, nullptr);
+
+        if (mixer) {
+          // Load sound effects
+          sfxShoot = MIX_LoadAudio(mixer, "data/audio/shoot.wav", true);
+          if (!sfxShoot) {
+            SDL_Log("Warning: Could not load shoot.wav: %s", SDL_GetError());
+          }
+
+          sfxWallHit = MIX_LoadAudio(mixer, "data/audio/wall_hit.wav", true);
+          if (!sfxWallHit) {
+            SDL_Log("Warning: Could not load wall_hit.wav: %s", SDL_GetError());
+          }
+
+          // Create track pool
+          for (int i = 0; i < 8; i++) {
+            MIX_Track *track = MIX_CreateTrack(mixer);
+            if (track) {
+              sfxTracks.push_back(track);
+            }
+          }
+
+          SDL_Log("Audio system initialized successfully!");
+        } else {
+          SDL_Log("Warning: Failed to create mixer: %s", SDL_GetError());
+        }
+      } else {
+        SDL_Log("Warning: Failed to open audio device: %s", SDL_GetError());
+      }
+    } else {
+      SDL_Log("Warning: Failed to initialize SDL_mixer: %s", SDL_GetError());
+    }
 
     texIdle = loadTexture(state.renderer, "data/idle.png");
     texSlide = loadTexture(state.renderer, "data/slide.png");
@@ -137,6 +193,8 @@ void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
 void drawParalaxBackground(SDL_Renderer *renderer, SDL_Texture *texture,
                            float xVelocity, float &scrollPos,
                            float scrollFactor, float deltaTime);
+
+void playSound(Resources &res, MIX_Audio *sound, float volume = 1.0f);
 
 int main(int argc, char *argv[]) {
 
@@ -286,7 +344,7 @@ int main(int argc, char *argv[]) {
 bool initialize(SDLState &state) {
   bool initSuccess = true;
 
-  if (!SDL_Init(SDL_INIT_VIDEO)) {
+  if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error",
                              "Error initializing SDL", nullptr);
     initSuccess = false;
@@ -411,6 +469,9 @@ void update(const SDLState &state, GameState &gs, Resources &res,
 
         if (weaponTimer.hasTimedOut()) {
           weaponTimer.reset();
+
+          // Play shoot sound HERE
+          playSound(res, res.sfxShoot, 0.3f); // 30% volume
 
           // spawn some bullets;
           GameObject bullet;
@@ -983,4 +1044,19 @@ void drawParalaxBackground(SDL_Renderer *renderer, SDL_Texture *texture,
                 .h = static_cast<float>(texture->h)};
 
   SDL_RenderTextureTiled(renderer, texture, nullptr, 1, &dst);
+}
+
+void playSound(Resources &res, MIX_Audio *sound, float volume) {
+  if (!sound || !res.mixer || res.sfxTracks.empty())
+    return;
+
+  // Find an available track (one that's not playing)
+  for (MIX_Track *track : res.sfxTracks) {
+    if (!MIX_TrackPlaying(track)) {
+      MIX_SetTrackAudio(track, sound);
+      MIX_SetTrackGain(track, volume);
+      MIX_PlayTrack(track, false);
+      return;
+    }
+  }
 }
