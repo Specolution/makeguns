@@ -77,6 +77,8 @@ struct Resources {
   MIX_Audio *sfxShoot;
   MIX_Audio *sfxWallHit;
   MIX_Audio *sfxEnemyHit;
+  MIX_Audio *music;
+  MIX_Track *musicTrack;
 
   SDL_Texture *loadTexture(SDL_Renderer *renderer,
                            const std::string &filepath) {
@@ -106,6 +108,8 @@ struct Resources {
     sfxShoot = nullptr;
     sfxWallHit = nullptr;
     sfxEnemyHit = nullptr;
+    music = nullptr;
+    musicTrack = nullptr;
 
     if (MIX_Init()) {
       // Open the default audio playback device
@@ -147,6 +151,22 @@ struct Resources {
             }
           }
 
+          musicTrack = MIX_CreateTrack(mixer);
+          music = MIX_LoadAudio(
+              mixer,
+              "data/audio/Juhani Junkala [Retro Game Music Pack] Level 1.mp3",
+              true);
+          if (music && musicTrack) {
+            MIX_SetTrackAudio(musicTrack, music);
+            MIX_SetTrackGain(musicTrack, 0.1f); // 10% volume
+            MIX_SetTrackGain(musicTrack, 0.1f); // 10% volume
+            MIX_PlayTrack(musicTrack, true);    // true = loop forever
+            SDL_Log("Background music started!");
+          } else {
+            SDL_Log("Warning: Could not load music: %s", SDL_GetError());
+          }
+          // END OF NEW BLOCK
+
           SDL_Log("Audio system initialized successfully!");
         } else {
           SDL_Log("Warning: Failed to create mixer: %s", SDL_GetError());
@@ -180,6 +200,32 @@ struct Resources {
   }
 
   void unload() {
+
+    if (musicTrack) {
+      MIX_PauseTrack(musicTrack);
+      MIX_DestroyTrack(musicTrack);
+    }
+
+    // Destroy sound effect tracks
+    for (MIX_Track *track : sfxTracks) {
+      MIX_DestroyTrack(track);
+    }
+
+    // Destroy audio data
+    if (music)
+      MIX_DestroyAudio(music);
+    if (sfxShoot)
+      MIX_DestroyAudio(sfxShoot);
+    if (sfxWallHit)
+      MIX_DestroyAudio(sfxWallHit);
+    if (sfxEnemyHit)
+      MIX_DestroyAudio(sfxEnemyHit);
+
+    // Destroy mixer
+    if (mixer)
+      MIX_DestroyMixer(mixer);
+
+    // Destroy textures (keep this part from your original)
 
     for (SDL_Texture *tex : textures) {
       SDL_DestroyTexture(tex);
