@@ -76,6 +76,7 @@ struct Resources {
   std::vector<MIX_Track *> sfxTracks;
   MIX_Audio *sfxShoot;
   MIX_Audio *sfxWallHit;
+  MIX_Audio *sfxEnemyHit;
 
   SDL_Texture *loadTexture(SDL_Renderer *renderer,
                            const std::string &filepath) {
@@ -104,6 +105,7 @@ struct Resources {
     mixer = nullptr;
     sfxShoot = nullptr;
     sfxWallHit = nullptr;
+    sfxEnemyHit = nullptr;
 
     if (MIX_Init()) {
       // Open the default audio playback device
@@ -129,6 +131,12 @@ struct Resources {
           sfxWallHit = MIX_LoadAudio(mixer, "data/audio/wall_hit.wav", true);
           if (!sfxWallHit) {
             SDL_Log("Warning: Could not load wall_hit.wav: %s", SDL_GetError());
+          }
+
+          sfxEnemyHit = MIX_LoadAudio(mixer, "data/audio/enemy_hit.wav", true);
+          if (!sfxWallHit) {
+            SDL_Log("Warning: Could not load enemy_hit.wav: %s",
+                    SDL_GetError());
           }
 
           // Create track pool
@@ -775,7 +783,7 @@ void collisionResponse(const SDLState &state, GameState &gs,
         EnemyData &d = objB.data.enemy;
 
         if (d.state != EnemyState::dead) {
-
+          playSound(res, res.sfxEnemyHit, 0.5f);
           objB.direction = -objA.direction;
           objB.shouldFlash = true;
           objB.flashTimer.reset();
