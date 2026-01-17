@@ -25,7 +25,9 @@ struct SDLState {
   int width, height, logW, logH;
 
   const bool *keys;
-  SDLState() : keys(SDL_GetKeyboardState(nullptr)) {}
+  bool fullscreen;
+
+  SDLState() : keys(SDL_GetKeyboardState(nullptr)) { fullscreen = false; }
 };
 
 struct GameState {
@@ -303,6 +305,11 @@ int main(int argc, char *argv[]) {
         handleKeyInput(state, gs, gs.player(), event.key.scancode, false);
         if (event.key.scancode == SDL_SCANCODE_F) {
           gs.debugMode = !gs.debugMode;
+        }
+
+        else if (event.key.scancode == SDL_SCANCODE_F11) {
+          state.fullscreen = !state.fullscreen;
+          SDL_SetWindowFullscreen(state.window, state.fullscreen);
         }
         break;
       }
