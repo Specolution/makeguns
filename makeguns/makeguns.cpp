@@ -194,7 +194,7 @@ void drawParalaxBackground(SDL_Renderer *renderer, SDL_Texture *texture,
                            float xVelocity, float &scrollPos,
                            float scrollFactor, float deltaTime);
 
-void playSound(Resources &res, MIX_Audio *sound, float volume = 1.0f);
+void playSound(const Resources &res, MIX_Audio *sound, float volume = 1.0f);
 
 int main(int argc, char *argv[]) {
 
@@ -767,6 +767,7 @@ void collisionResponse(const SDLState &state, GameState &gs,
     case BulletState::moving: {
       switch (objB.type) {
       case ObjectType::level: {
+        playSound(res, res.sfxWallHit, 0.5f);
         break;
       }
 
@@ -1046,7 +1047,7 @@ void drawParalaxBackground(SDL_Renderer *renderer, SDL_Texture *texture,
   SDL_RenderTextureTiled(renderer, texture, nullptr, 1, &dst);
 }
 
-void playSound(Resources &res, MIX_Audio *sound, float volume) {
+void playSound(const Resources &res, MIX_Audio *sound, float volume) {
   if (!sound || !res.mixer || res.sfxTracks.empty())
     return;
 
